@@ -1,12 +1,18 @@
 package app;
 
+import mutex.Mutex;
+import mutex.SuzukiKasamiMutex;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
+import java.util.Scanner;
 
 /**
  * This class contains all the global application configuration stuff.
@@ -19,6 +25,10 @@ public class AppConfig {
 	 * Convenience access for this servent's information
 	 */
 	public static ServentInfo myServentInfo;
+
+	public static int WEAK_FAILURE_THRESHOLD = 4000; // ms
+	public static int STRONG_FAILURE_THRESHOLD = 10000; // ms
+	public static String WORKING_ROOT; // putanja do radnog direktorijuma
 	
 	/**
 	 * Print a message to stdout with a timestamp
@@ -47,6 +57,7 @@ public class AppConfig {
 	public static int SERVENT_COUNT;
 	
 	public static ChordState chordState;
+	public static Mutex mutexManager;
 	
 	/**
 	 * Reads a config file. Should be called once at start of app.
@@ -98,6 +109,8 @@ public class AppConfig {
 			
 			ChordState.CHORD_SIZE = chordSize;
 			chordState = new ChordState();
+
+
 			
 		} catch (NumberFormatException e) {
 			timestampedErrorPrint("Problem reading chord_size. Must be a number that is a power of 2. Exiting...");
@@ -116,6 +129,28 @@ public class AppConfig {
 		}
 		
 		myServentInfo = new ServentInfo("localhost", serventPort);
+
+//		boolean isFirstNode = isFirstNode();
+//		mutexManager = new SuzukiKasamiMutex(isFirstNode);
+	}
+
+
+	// Add a method to check if this is the first node
+	public static boolean isFirstNode() {
+		// Connect to bootstrap and check if reply is -1
+		try (Socket bsSocket = new Socket("localhost", BOOTSTRAP_PORT);
+			 PrintWriter bsWriter = new PrintWriter(bsSocket.getOutputStream(), true);
+			 Scanner bsScanner = new Scanner(bsSocket.getInputStream())) {
+
+			bsWriter.println("Hail");
+			bsWriter.println(myServentInfo.getListenerPort());
+			int reply = bsScanner.nextInt();
+			return reply == -1;
+		} catch (IOException e) {
+			timestampedErrorPrint("Error contacting bootstrap.");
+			System.exit(0);
+		}
+		return false;
 	}
 	
 }

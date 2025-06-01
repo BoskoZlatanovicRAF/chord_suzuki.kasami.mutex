@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import mutex.SuzukiKasamiMutex;
 import servent.message.NewNodeMessage;
 import servent.message.util.MessageUtil;
 
@@ -46,7 +47,9 @@ public class ServentInitializer implements Runnable {
 		}
 		if (someServentPort == -1) { //bootstrap gave us -1 -> we are first
 			AppConfig.timestampedStandardPrint("First node in Chord system.");
+			AppConfig.mutexManager = new SuzukiKasamiMutex(true);
 		} else { //bootstrap gave us something else - let that node tell our successor that we are here
+			AppConfig.mutexManager = new SuzukiKasamiMutex(false);
 			NewNodeMessage nnm = new NewNodeMessage(AppConfig.myServentInfo.getListenerPort(), someServentPort);
 			MessageUtil.sendMessage(nnm);
 		}

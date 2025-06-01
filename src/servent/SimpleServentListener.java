@@ -9,15 +9,7 @@ import java.util.concurrent.Executors;
 
 import app.AppConfig;
 import app.Cancellable;
-import servent.handler.AskGetHandler;
-import servent.handler.MessageHandler;
-import servent.handler.NewNodeHandler;
-import servent.handler.NullHandler;
-import servent.handler.PutHandler;
-import servent.handler.SorryHandler;
-import servent.handler.TellGetHandler;
-import servent.handler.UpdateHandler;
-import servent.handler.WelcomeHandler;
+import servent.handler.*;
 import servent.message.Message;
 import servent.message.util.MessageUtil;
 
@@ -86,6 +78,14 @@ public class SimpleServentListener implements Runnable, Cancellable {
 					break;
 				case TELL_GET:
 					messageHandler = new TellGetHandler(clientMessage);
+					break;
+				case LEAVE_NODE:
+					messageHandler = new LeaveNodeHandler(clientMessage);
+				case TOKEN:
+					messageHandler = new TokenHandler(clientMessage);
+					break;
+				case TOKEN_REQUEST:
+					messageHandler = new TokenRequestHandler(clientMessage);
 					break;
 				case POISON:
 					break;

@@ -1,3 +1,4 @@
-pause 30000
+pause 8000
+dht_put 2 12
 pause 10000
 stop

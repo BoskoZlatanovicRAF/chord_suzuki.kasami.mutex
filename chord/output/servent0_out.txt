@@ -1,3 +1,41 @@
-09:43:20 - Starting servent [28|localhost|1100]
-09:43:20 - Pausing for 50000 ms
-09:43:20 - First node in Chord system.
+17:41:31 - Starting servent [28|localhost|1100]
+17:41:31 - Pausing for 20000 ms
+17:41:31 - First node in Chord system.
+17:41:31 - I am node 28 - starting with TOKEN
+17:41:32 - Got message [4|1300|0||NEW_NODE|1100|28]
+17:41:32 - Already have TOKEN - entering critical section
+17:41:32 - Releasing TOKEN
+17:41:32 - Got message [48|1200|0||NEW_NODE|1100|28]
+17:41:32 - Already have TOKEN - entering critical section
+17:41:32 - Releasing TOKEN
+17:41:32 - Got message [0|1600|0||NEW_NODE|1100|28]
+17:41:32 - Already have TOKEN - entering critical section
+17:41:32 - Releasing TOKEN
+17:41:32 - Got message [24|1400|0||NEW_NODE|1100|28]
+17:41:32 - Already have TOKEN - entering critical section
+17:41:32 - Releasing TOKEN
+17:41:33 - Sending message [28|1100|2||WELCOME|1400|24]
+17:41:33 - Sending message [28|1100|1||WELCOME|1300|4]
+17:41:34 - Got message [4|1300|1||UPDATE|1100|28]
+17:41:34 - Already have TOKEN - entering critical section
+17:41:34 - Releasing TOKEN
+17:41:34 - Got message [24|1400|1||UPDATE|1100|28]
+17:41:34 - Already have TOKEN - entering critical section
+17:41:34 - Releasing TOKEN
+17:41:35 - Sending message [4|1300|3|1100|UPDATE|1300|4]
+17:41:36 - Sending message [24|1400|4|1100|UPDATE|1300|4]
+17:41:37 - Got message [4|1300|2|4:1|TOKEN_REQUEST|1100|28]
+17:41:37 - Received TOKEN_REQUEST from node 4 with request number 1
+17:41:37 - Processing TOKEN_REQUEST from node 4 with request #1
+17:41:37 - Have TOKEN and not using it - sending to node 4
+17:41:37 - Got message [4|1300|3|4:2|TOKEN_REQUEST|1100|28]
+17:41:37 - Received TOKEN_REQUEST from node 4 with request number 2
+17:41:37 - Processing TOKEN_REQUEST from node 4 with request #2
+17:41:38 - Sending message [28|1100|7|4:2|TOKEN_REQUEST|1300|4]
+17:41:38 - Sending message [28|1100|6|4:1|TOKEN_REQUEST|1300|4]
+17:41:38 - Sending message [28|1100|5||TOKEN|1300|4]
+17:41:51 - Please wait...
+17:41:51 - Pausing for 2000 ms
+17:41:52 - Sending message [28|1100|8|2|ASK_GET|1300|4]
+17:41:53 - Pausing for 10000 ms
+17:42:03 - Stopping...

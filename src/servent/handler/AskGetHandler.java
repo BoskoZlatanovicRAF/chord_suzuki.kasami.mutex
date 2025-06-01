@@ -21,6 +21,7 @@ public class AskGetHandler implements MessageHandler {
 	@Override
 	public void run() {
 		if (clientMessage.getMessageType() == MessageType.ASK_GET) {
+			AppConfig.mutexManager.lock();
 			try {
 				int key = Integer.parseInt(clientMessage.getMessageText());
 				if (AppConfig.chordState.isKeyMine(key)) {
@@ -41,6 +42,8 @@ public class AskGetHandler implements MessageHandler {
 				}
 			} catch (NumberFormatException e) {
 				AppConfig.timestampedErrorPrint("Got ask get with bad text: " + clientMessage.getMessageText());
+			} finally {
+				AppConfig.mutexManager.unlock();
 			}
 			
 		} else {

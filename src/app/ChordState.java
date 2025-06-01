@@ -4,11 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import servent.message.AskGetMessage;
 import servent.message.PutMessage;
@@ -345,4 +341,42 @@ public class ChordState {
 		return -2;
 	}
 
+
+
+
+
+	/**
+	 * Obaveštava bootstrap server da čvor napušta sistem
+	 */
+	public void notifyBootstrapLeaving() {
+		try {
+			Socket bsSocket = new Socket("localhost", AppConfig.BOOTSTRAP_PORT);
+
+			PrintWriter bsWriter = new PrintWriter(bsSocket.getOutputStream());
+			bsWriter.write("Leave\n" + AppConfig.myServentInfo.getListenerPort() + "\n");
+			bsWriter.flush();
+
+			// Čekaj potvrdu od bootstrap-a
+			Scanner bsScanner = new Scanner(bsSocket.getInputStream());
+			String response = bsScanner.nextLine();
+
+			if (response.equals("OK")) {
+				AppConfig.timestampedStandardPrint("Successfully notified bootstrap about leaving");
+			} else {
+				AppConfig.timestampedErrorPrint("Bootstrap did not confirm leaving");
+			}
+
+			bsSocket.close();
+		} catch (UnknownHostException e) {
+			AppConfig.timestampedErrorPrint("Could not reach bootstrap server");
+			e.printStackTrace();
+		} catch (IOException e) {
+			AppConfig.timestampedErrorPrint("Error communicating with bootstrap server");
+			e.printStackTrace();
+		}
+	}
+
+	public List<ServentInfo> getAllNodeInfo() {
+		return allNodeInfo;
+	}
 }

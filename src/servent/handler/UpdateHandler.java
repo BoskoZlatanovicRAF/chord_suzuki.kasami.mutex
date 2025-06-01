@@ -21,30 +21,35 @@ public class UpdateHandler implements MessageHandler {
 	@Override
 	public void run() {
 		if (clientMessage.getMessageType() == MessageType.UPDATE) {
-			if (clientMessage.getSenderPort() != AppConfig.myServentInfo.getListenerPort()) {
-				ServentInfo newNodInfo = new ServentInfo("localhost", clientMessage.getSenderPort());
-				List<ServentInfo> newNodes = new ArrayList<>();
-				newNodes.add(newNodInfo);
-				
-				AppConfig.chordState.addNodes(newNodes);
-				String newMessageText = "";
-				if (clientMessage.getMessageText().equals("")) {
-					newMessageText = String.valueOf(AppConfig.myServentInfo.getListenerPort());
+			AppConfig.mutexManager.lock();
+			try {
+				if (clientMessage.getSenderPort() != AppConfig.myServentInfo.getListenerPort()) {
+					ServentInfo newNodInfo = new ServentInfo("localhost", clientMessage.getSenderPort());
+					List<ServentInfo> newNodes = new ArrayList<>();
+					newNodes.add(newNodInfo);
+
+					AppConfig.chordState.addNodes(newNodes);
+					String newMessageText = "";
+					if (clientMessage.getMessageText().equals("")) {
+						newMessageText = String.valueOf(AppConfig.myServentInfo.getListenerPort());
+					} else {
+						newMessageText = clientMessage.getMessageText() + "," + AppConfig.myServentInfo.getListenerPort();
+					}
+					Message nextUpdate = new UpdateMessage(clientMessage.getSenderPort(), AppConfig.chordState.getNextNodePort(),
+							newMessageText);
+					MessageUtil.sendMessage(nextUpdate);
 				} else {
-					newMessageText = clientMessage.getMessageText() + "," + AppConfig.myServentInfo.getListenerPort();
+					String messageText = clientMessage.getMessageText();
+					String[] ports = messageText.split(",");
+
+					List<ServentInfo> allNodes = new ArrayList<>();
+					for (String port : ports) {
+						allNodes.add(new ServentInfo("localhost", Integer.parseInt(port)));
+					}
+					AppConfig.chordState.addNodes(allNodes);
 				}
-				Message nextUpdate = new UpdateMessage(clientMessage.getSenderPort(), AppConfig.chordState.getNextNodePort(),
-						newMessageText);
-				MessageUtil.sendMessage(nextUpdate);
-			} else {
-				String messageText = clientMessage.getMessageText();
-				String[] ports = messageText.split(",");
-				
-				List<ServentInfo> allNodes = new ArrayList<>();
-				for (String port : ports) {
-					allNodes.add(new ServentInfo("localhost", Integer.parseInt(port)));
-				}
-				AppConfig.chordState.addNodes(allNodes);
+			} finally {
+				AppConfig.mutexManager.unlock();
 			}
 		} else {
 			AppConfig.timestampedErrorPrint("Update message handler got message that is not UPDATE");

@@ -98,6 +98,29 @@ public class BootstrapServer {
 					
 					activeServents.add(newServentPort);
 					newServentSocket.close();
+				} else if (message.equals("Leave")) {
+					/**
+					 * Servent is leaving the system gracefully
+					 */
+					int leavingServentPort = socketScanner.nextInt();
+
+					System.out.println("removing " + leavingServentPort);
+
+					// Ukloni iz liste aktivnih serventa
+					boolean removed = activeServents.removeIf(port -> port.equals(leavingServentPort));
+
+					// DODAJ OVO - pošalji odgovor!
+					PrintWriter socketWriter = new PrintWriter(newServentSocket.getOutputStream());
+					if (removed) {
+						socketWriter.write("OK\n");
+					} else {
+						socketWriter.write("NOT_FOUND\n");
+					}
+					socketWriter.flush();
+
+					newServentSocket.close();
+				}else {
+					AppConfig.timestampedErrorPrint("Unknown message from new servent: " + message);
 				}
 				
 			} catch (SocketTimeoutException e) {
