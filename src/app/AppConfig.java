@@ -57,7 +57,7 @@ public class AppConfig {
 	public static int SERVENT_COUNT;
 	
 	public static ChordState chordState;
-	public static Mutex mutexManager;
+	public static Mutex mutexManager; // any mutex implementation
 	
 	/**
 	 * Reads a config file. Should be called once at start of app.

@@ -13,9 +13,9 @@ import java.util.concurrent.TimeUnit;
 
 public class HealthCheckThread implements Runnable, Cancellable {
 
-    private static final long PING_INTERVAL = 2000;     // na svakih 2s šalji ping
-    private static final long SOFT_LIMIT = 4000;        // 4 sekunde – sumnjiv
-    private static final long HARD_LIMIT = 10000;       // 10 sekundi – mrtav
+    private static final long PING_INTERVAL = 2000;     // ping every 2 seconds
+    private static final long SOFT_LIMIT = 4000;        // 4 seconds - suspicious
+    private static final long HARD_LIMIT = 10000;       // 10 seconds - dead
 
     private Map<Integer, Long> lastPongTime = new HashMap<>();
     private Map<Integer, Boolean> isSuspect = new HashMap<>();
@@ -27,6 +27,8 @@ public class HealthCheckThread implements Runnable, Cancellable {
     public void run() {
         while (working) {
             try {
+
+                // predecessor and successor are null in some cases cant find out why
                 AppConfig.timestampedErrorPrint("HealthCheckThread sucessor ceo" + Arrays.toString(AppConfig.chordState.getSuccessorTable()));
                 AppConfig.timestampedErrorPrint("HealthCheckThread prvi successor" + AppConfig.chordState.getSuccessorTable()[0]);
                 AppConfig.timestampedErrorPrint("HealthCheckThread predecessor" + AppConfig.chordState.getPredecessor());
@@ -34,11 +36,10 @@ public class HealthCheckThread implements Runnable, Cancellable {
                 ServentInfo succ = AppConfig.chordState.getSuccessorTable()[0];
                 ServentInfo pred = AppConfig.chordState.getPredecessor();
 
-                // PINGUJ oba
+                // PING both successor and predecessor
                 if (succ != null) sendPing(succ);
                 if (pred != null) sendPing(pred);
 
-                // Proveri statuse
                 checkStatus(succ);
                 checkStatus(pred);
 
@@ -68,7 +69,7 @@ public class HealthCheckThread implements Runnable, Cancellable {
         long now = System.currentTimeMillis();
         long last = lastPongTime.getOrDefault(nodeId, now);
 
-
+        // doesnt work
         if (isBuddyOf(nodeId)) {
             restoreBackupFor(nodeId);
         }
@@ -77,13 +78,13 @@ public class HealthCheckThread implements Runnable, Cancellable {
             AppConfig.timestampedStandardPrint("Node " + nodeId + " je sumnjiv!");
             isSuspect.put(nodeId, true);
 
-            // Buddy = drugi sused
+            // Buddy check
             ServentInfo buddy = getBuddyForNode(nodeId);
             if (buddy != null && buddy.getChordId() != nodeId) {
                 PingSuspectMessage msg = new PingSuspectMessage(
                         AppConfig.myServentInfo.getListenerPort(),
                         buddy.getListenerPort(),
-                        nodeId // sumnjivi node
+                        nodeId // suspicious node ID
                 );
                 MessageUtil.sendMessage(msg);
             }
@@ -92,7 +93,7 @@ public class HealthCheckThread implements Runnable, Cancellable {
         }
 
         if (now - last > HARD_LIMIT) {
-            // Mrtav
+            // Dead
             AppConfig.timestampedStandardPrint("Node " + nodeId + " je mrtav!");
             handleNodeFailure(nodeId);
         }
@@ -101,17 +102,17 @@ public class HealthCheckThread implements Runnable, Cancellable {
     private void handleNodeFailure(int nodeId) {
         AppConfig.timestampedStandardPrint("HANDLENODEFAILURE: Node " + nodeId + " se uklanja iz sistema!");
 
-        // 1. Izbaci node iz svih relevantnih tabela
+        // 1. Remove node from Chord state
         AppConfig.chordState.removeNodeById(nodeId);
 
         int failedNodePort = AppConfig.chordState.getPortForNodeId(nodeId);
-        // 2. Obavesti sve ostale čvorove da ga uklone
+        // 2. Notify other nodes about the failure
         for (ServentInfo node : AppConfig.chordState.getAllNodeInfo()) {
             if (node.getChordId() != AppConfig.myServentInfo.getChordId()) {
                 NodeFailedMessage msg = new NodeFailedMessage(
                         AppConfig.myServentInfo.getListenerPort(),
                         node.getListenerPort(),
-                        failedNodePort // port mrtvog node-a!
+                        failedNodePort // port of the failed node
                 );
                 MessageUtil.sendMessage(msg);
             }
@@ -119,16 +120,15 @@ public class HealthCheckThread implements Runnable, Cancellable {
 
 
 
-        // 4. Token recovery: pitaj sve "da li imaš token?", ako niko nema, kreiraj novi token
-        checkAndRecoverTokenIfNeeded(nodeId); // Implementacija zavisi od tvoje Suzuki-Kasami logike
+        // 4. Token recovery: ask everyone if they have the token
+        checkAndRecoverTokenIfNeeded(nodeId);
     }
 
     private final Map<Integer, Boolean> tokenResponses = new ConcurrentHashMap<>();
     private CountDownLatch tokenInquiryLatch;
 
-
+    // todo: needs refactoring, this is a bit messy
     public void checkAndRecoverTokenIfNeeded(int failedNodeId) {
-        // Pošalji svima HaveTokenMessage
         List<ServentInfo> allNodes = AppConfig.chordState.getAllNodeInfo();
         int myPort = AppConfig.myServentInfo.getListenerPort();
 
@@ -141,7 +141,7 @@ public class HealthCheckThread implements Runnable, Cancellable {
         }
 
         try {
-            tokenInquiryLatch.await(2000, TimeUnit.MILLISECONDS); // čekaj max 2s
+            tokenInquiryLatch.await(2000, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ignored) {}
 
         boolean someoneHasToken = tokenResponses.values().stream().anyMatch(b -> b);
@@ -164,7 +164,7 @@ public class HealthCheckThread implements Runnable, Cancellable {
     public void restoreBackupFor(int nodeId) {
         Map<Integer, Integer> backupData = AppConfig.chordState.getBackupMap().get(nodeId);
         if (backupData == null) {
-//            AppConfig.timestampedStandardPrint("Nema backup podataka za node " + nodeId);
+            AppConfig.timestampedStandardPrint("Nema backup podataka za node " + nodeId);
             return;
         }
 
@@ -175,7 +175,6 @@ public class HealthCheckThread implements Runnable, Cancellable {
         AppConfig.chordState.getBackupMap().remove(nodeId);
     }
 
-    // Helper za proveru buddy statusa (primer):
     private boolean isBuddyOf(int nodeId) {
         ServentInfo succ = AppConfig.chordState.getSuccessorTable()[0];
         ServentInfo pred = AppConfig.chordState.getPredecessor();
@@ -188,13 +187,11 @@ public class HealthCheckThread implements Runnable, Cancellable {
         ServentInfo successor = AppConfig.chordState.getSuccessorTable()[0];
         ServentInfo predecessor = AppConfig.chordState.getPredecessor();
 
-        // Ako ti je sumnjiv successor, pitaj predecessor, i obrnuto
         if (successor != null && successor.getChordId() == nodeId && predecessor != null) {
             return predecessor;
         } else if (predecessor != null && predecessor.getChordId() == nodeId && successor != null) {
             return successor;
         } else {
-            // Ako nodeId nije ni successor ni predecessor, ili nemaš oba
             return null;
         }
     }

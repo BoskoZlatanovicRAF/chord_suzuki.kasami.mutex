@@ -106,10 +106,10 @@ public class BootstrapServer {
 
 					System.out.println("removing " + leavingServentPort);
 
-					// Ukloni iz liste aktivnih serventa
+					// Remove the leaving servent from the active list
 					boolean removed = activeServents.removeIf(port -> port.equals(leavingServentPort));
 
-					// DODAJ OVO - pošalji odgovor!
+
 					PrintWriter socketWriter = new PrintWriter(newServentSocket.getOutputStream());
 					if (removed) {
 						socketWriter.write("OK\n");

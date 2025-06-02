@@ -19,7 +19,6 @@ public class SuzukiKasamiMutex implements Mutex {
     private int myNodeId;
     private int nodeCount;
 
-    // Za thread synchronization
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition tokenReceived = lock.newCondition();
     private boolean waitingForToken = false;
@@ -47,14 +46,12 @@ public class SuzukiKasamiMutex implements Mutex {
                 return;
             }
 
-            // Povećaj moj request number
+            // Update my request number
             RN[myNodeId]++;
             AppConfig.timestampedStandardPrint("Requesting TOKEN (request #" + RN[myNodeId] + ")");
 
-            // Pošalji TOKEN_REQUEST svim čvorovima
             broadcastTokenRequest();
 
-            // Čekaj da dobijem token
             waitingForToken = true;
             while (!hasToken) {
                 tokenReceived.await();
@@ -84,7 +81,7 @@ public class SuzukiKasamiMutex implements Mutex {
 
             AppConfig.timestampedStandardPrint("Releasing TOKEN");
 
-            // 1) update your LN
+            // 1) update LN
             currentToken.getLN()[myNodeId] = RN[myNodeId];
 
             // 2) queue anyone whose RN == LN+1
@@ -127,7 +124,7 @@ public class SuzukiKasamiMutex implements Mutex {
         int requestNumber = RN[myId];
         ServentInfo successor = AppConfig.chordState.getSuccessorTable()[0];
 
-        // Ako sam sam u prstenu, nema broadcast-a
+        // If I am the only node or my successor is myself, no need to send a request
         if (successor.getChordId() == myId) {
             return;
         }
@@ -141,6 +138,8 @@ public class SuzukiKasamiMutex implements Mutex {
         MessageUtil.sendMessage(req);
     }
 
+
+    // hardcoded port numbers for nodes
     private int getPortForNodeId(int nodeId) {
 //        switch (nodeId) {
 //            case 0: return 1100;
@@ -156,7 +155,6 @@ public class SuzukiKasamiMutex implements Mutex {
                 return node.getListenerPort();
             }
         }
-        // Greška ako node ne postoji
         throw new IllegalArgumentException("Node ID not found: " + nodeId);
     }
 
@@ -168,11 +166,10 @@ public class SuzukiKasamiMutex implements Mutex {
 
             RN[fromNodeId] = Math.max(RN[fromNodeId], requestNumber);
 
-            // Ako imam token i nije mi potreban, pošalji ga odmah
+            // if I have the token and the request is higher than my LN, I send the token
             if (hasToken && !waitingForToken) {
                 AppConfig.timestampedStandardPrint("Have TOKEN and not using it - sending to node " + fromNodeId);
 
-//                int targetPort = getPortForNodeId(fromNodeId);
                 TokenMessage tokenToSend = new TokenMessage(
                         AppConfig.myServentInfo.getListenerPort(),
                         fromPort,

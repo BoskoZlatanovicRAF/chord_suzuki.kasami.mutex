@@ -19,18 +19,17 @@ public class PingSuspectHandler implements MessageHandler {
             int suspectNodeId = msg.getSuspectNodeId();
             int suspectPort = AppConfig.chordState.getPortForNodeId(suspectNodeId);
 
-            // Šaljemo ping sumnjivom čvoru
+            // sending ping to suspect node
             PingMessage ping = new PingMessage(
                     AppConfig.myServentInfo.getListenerPort(),
                     suspectPort
             );
             MessageUtil.sendMessage(ping);
 
-            // Čekamo da li dobijamo PONG u roku SOFT_LIMIT (4s)
+            // wait for SOFT_LIMIT (4s)
             boolean received = waitForPong(suspectNodeId, 4000); // Implementacija ove metode ispod
 
             if (!received) {
-                // Pošalji ConfirmedSuspectMessage tražiocu
                 ConfirmedSuspectMessage csm = new ConfirmedSuspectMessage(
                         AppConfig.myServentInfo.getListenerPort(),
                         clientMessage.getSenderPort(),
@@ -38,17 +37,16 @@ public class PingSuspectHandler implements MessageHandler {
                 );
                 MessageUtil.sendMessage(csm);
             }
-            // Ako dobiješ PONG, ništa ne šalješ (ili šalješ opcioni SuspectOkMessage)
         }
     }
 
-    // Simple busy-wait; možeš koristiti i fensi Java Future/Condition/Timer
+    // Simple busy-wait
     private boolean waitForPong(int nodeId, int timeoutMs) {
         long start = System.currentTimeMillis();
         while (System.currentTimeMillis() - start < timeoutMs) {
             Long last = AppConfig.chordState.getHealthCheckThread().getLastPongTime(nodeId);
             if (last != null && System.currentTimeMillis() - last < 2000) {
-                return true; // Primili smo skoro PONG
+                return true; // received a pong within 2 seconds
             }
             try { Thread.sleep(100); } catch (InterruptedException ignored) {}
         }

@@ -351,7 +351,7 @@ public class ChordState {
 
 
 	/**
-	 * Obaveštava bootstrap server da čvor napušta sistem
+	 * Notifies the bootstrap server that this node is leaving the network.
 	 */
 	public void notifyBootstrapLeaving() {
 		try {
@@ -361,7 +361,7 @@ public class ChordState {
 			bsWriter.write("Leave\n" + AppConfig.myServentInfo.getListenerPort() + "\n");
 			bsWriter.flush();
 
-			// Čekaj potvrdu od bootstrap-a
+			// Wait for confirmation from bootstrap
 			Scanner bsScanner = new Scanner(bsSocket.getInputStream());
 			String response = bsScanner.nextLine();
 
@@ -380,16 +380,15 @@ public class ChordState {
 			e.printStackTrace();
 		}
 	}
-
+   	// this is a bit of a hard-coded
 	public void removeNodeById(int nodeId) {
 		allNodeInfo.removeIf(node -> node.getChordId() == nodeId);
-		// Ažuriraj successor i predecessor
-		addNodes(Collections.emptyList()); // Trigeruj update successorTable & predecessorInfo
+		addNodes(Collections.emptyList()); // triggers update of successorTable and predecessorInfo with empty list
 	}
 
 	public void removeNodeByPort(int port) {
 		allNodeInfo.removeIf(node -> node.getListenerPort() == port);
-		addNodes(Collections.emptyList()); // Ažurira successorTable i predecessorInfo na osnovu nove liste
+		addNodes(Collections.emptyList()); // triggers update of successorTable and predecessorInfo with empty list
 	}
 
 	public List<ServentInfo> getAllNodeInfo() {
@@ -403,7 +402,7 @@ public class ChordState {
 	public void setHealthCheckThread(HealthCheckThread healthCheckThread) {
 		this.healthCheckThread = healthCheckThread;
 	}
-
+ 	// this is a bit of a hard-coded mapping, should just send port in the message but was too lazy to change it
 	public int getPortForNodeId(int id){
 		return switch (id) {
 			case 28 -> 1100;

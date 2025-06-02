@@ -26,18 +26,18 @@ public class LeaveNodeHandler implements MessageHandler {
 
                 AppConfig.timestampedStandardPrint("Node " + leavingNodePort + " is leaving - taking over its data");
 
-                // Preuzmi podatke od čvora koji odlazi
+                // take over the data from the leaving node
                 Map<Integer, Integer> incomingValues = leaveMsg.getTransferredValues();
                 Map<Integer, Integer> myValues = AppConfig.chordState.getValueMap();
 
-                // Dodaj sve njegove podatke u moje
+                // add incoming values to my values
                 for (Map.Entry<Integer, Integer> entry : incomingValues.entrySet()) {
                     myValues.put(entry.getKey(), entry.getValue());
                     AppConfig.timestampedStandardPrint("Inherited key " + entry.getKey() + " with value " + entry.getValue());
                 }
                 AppConfig.chordState.setValueMap(myValues);
 
-                // Pokreni reorganizaciju sistema - obavesti sve ostale čvorove
+                // reorganize the system
                 AppConfig.timestampedStandardPrint("Starting system reorganization after node " + leavingNodePort + " left");
 
                 UpdateMessage um = new UpdateMessage(
