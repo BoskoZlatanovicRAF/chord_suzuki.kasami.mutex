@@ -50,7 +50,12 @@ public class ChordState {
 	private List<ServentInfo> allNodeInfo;
 	
 	private Map<Integer, Integer> valueMap;
-	
+
+	private Map<Integer, Map<Integer, Integer>> backupMap = new HashMap<>();
+
+	private HealthCheckThread healthCheckThread;
+
+
 	public ChordState() {
 		this.chordLevel = 1;
 		int tmp = CHORD_SIZE;
@@ -376,7 +381,45 @@ public class ChordState {
 		}
 	}
 
+	public void removeNodeById(int nodeId) {
+		allNodeInfo.removeIf(node -> node.getChordId() == nodeId);
+		// Ažuriraj successor i predecessor
+		addNodes(Collections.emptyList()); // Trigeruj update successorTable & predecessorInfo
+	}
+
+	public void removeNodeByPort(int port) {
+		allNodeInfo.removeIf(node -> node.getListenerPort() == port);
+		addNodes(Collections.emptyList()); // Ažurira successorTable i predecessorInfo na osnovu nove liste
+	}
+
 	public List<ServentInfo> getAllNodeInfo() {
 		return allNodeInfo;
+	}
+
+	public HealthCheckThread getHealthCheckThread() {
+		return healthCheckThread;
+	}
+
+	public void setHealthCheckThread(HealthCheckThread healthCheckThread) {
+		this.healthCheckThread = healthCheckThread;
+	}
+
+	public int getPortForNodeId(int id){
+		return switch (id) {
+			case 28 -> 1100;
+			case 48 -> 1200;
+			case 4 -> 1300;
+			case 24 -> 1400;
+			case 0 -> 1600;
+			default -> -1; // Invalid ID
+		};
+	}
+
+	public Map<Integer, Map<Integer, Integer>> getBackupMap() {
+		return backupMap;
+	}
+
+	public void updateBackupForNode(ServentInfo node, Map<Integer, Integer> theirMap) {
+		backupMap.put(node.getChordId(), new HashMap<>(theirMap));
 	}
 }

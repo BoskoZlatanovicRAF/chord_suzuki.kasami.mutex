@@ -15,18 +15,20 @@ public class PutHandler implements MessageHandler {
 	@Override
 	public void run() {
 		if (clientMessage.getMessageType() == MessageType.PUT) {
+
 			String[] splitText = clientMessage.getMessageText().split(":");
 			if (splitText.length == 2) {
 				int key = 0;
 				int value = 0;
-				
+				AppConfig.mutexManager.lock();
 				try {
 					key = Integer.parseInt(splitText[0]);
 					value = Integer.parseInt(splitText[1]);
-					
 					AppConfig.chordState.putValue(key, value);
 				} catch (NumberFormatException e) {
 					AppConfig.timestampedErrorPrint("Got put message with bad text: " + clientMessage.getMessageText());
+				} finally {
+					AppConfig.mutexManager.unlock();
 				}
 			} else {
 				AppConfig.timestampedErrorPrint("Got put message with bad text: " + clientMessage.getMessageText());

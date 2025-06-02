@@ -18,7 +18,6 @@ public class TellGetHandler implements MessageHandler {
 			String parts[] = clientMessage.getMessageText().split(":");
 			
 			if (parts.length == 2) {
-				AppConfig.mutexManager.lock();
 				try {
 					int key = Integer.parseInt(parts[0]);
 					int value = Integer.parseInt(parts[1]);
@@ -29,8 +28,6 @@ public class TellGetHandler implements MessageHandler {
 					}
 				} catch (NumberFormatException e) {
 					AppConfig.timestampedErrorPrint("Got TELL_GET message with bad text: " + clientMessage.getMessageText());
-				} finally {
-					AppConfig.mutexManager.unlock();
 				}
 			} else {
 				AppConfig.timestampedErrorPrint("Got TELL_GET message with bad text: " + clientMessage.getMessageText());

@@ -81,11 +81,33 @@ public class SimpleServentListener implements Runnable, Cancellable {
 					break;
 				case LEAVE_NODE:
 					messageHandler = new LeaveNodeHandler(clientMessage);
+					break;
 				case TOKEN:
 					messageHandler = new TokenHandler(clientMessage);
 					break;
 				case TOKEN_REQUEST:
 					messageHandler = new TokenRequestHandler(clientMessage);
+					break;
+				case PING:
+					messageHandler = new PingHandler(clientMessage);
+					break;
+				case PONG:
+					messageHandler = new PongHandler(clientMessage);
+					break;
+				case PING_SUSPECT:
+					messageHandler = new PingSuspectHandler(clientMessage);
+					break;
+				case CONFIRMED_SUSPECT:
+					messageHandler = new ConfirmedSuspectHandler(clientMessage);
+					break;
+				case NODE_FAILED:
+					messageHandler = new NodeFailedHandler(clientMessage);
+					break;
+				case HAVE_TOKEN:
+					messageHandler = new HaveTokenHandler(clientMessage);
+					break;
+				case HAVE_TOKEN_RESPONSE:
+					messageHandler = new HaveTokenResponseHandler(clientMessage);
 					break;
 				case POISON:
 					break;

@@ -31,6 +31,8 @@ public class LeaveCommand implements CLICommand{
         if (AppConfig.chordState.getSuccessorTable()[0] != null &&
                 AppConfig.chordState.getSuccessorTable()[0].getListenerPort() != AppConfig.myServentInfo.getListenerPort()) {
 
+
+            AppConfig.timestampedErrorPrint("[LeaveCommand] Sending leave message to successor: " +AppConfig.chordState.getSuccessorTable()[0]);
             LeaveNodeMessage leaveMsg = new LeaveNodeMessage(
                     AppConfig.myServentInfo.getListenerPort(),
                     AppConfig.chordState.getSuccessorTable()[0].getListenerPort(),
@@ -50,5 +52,6 @@ public class LeaveCommand implements CLICommand{
         AppConfig.timestampedStandardPrint("Left the system gracefully");
         parser.stop();
         listener.stop();
+        AppConfig.chordState.getHealthCheckThread().stop();
     }
 }

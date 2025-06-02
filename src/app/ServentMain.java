@@ -58,6 +58,12 @@ public class ServentMain {
 		ServentInitializer serventInitializer = new ServentInitializer();
 		Thread initializerThread = new Thread(serventInitializer);
 		initializerThread.start();
+
+		HealthCheckThread healthCheckThread = new HealthCheckThread();
+		AppConfig.chordState.setHealthCheckThread(healthCheckThread);
+		Thread healthCheckThreadThread = new Thread(healthCheckThread);
+		healthCheckThreadThread.setName("HealthCheckThread");
+		healthCheckThreadThread.start();
 		
 	}
 }
